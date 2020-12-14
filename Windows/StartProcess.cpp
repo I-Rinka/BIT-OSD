@@ -13,7 +13,7 @@ int main(int argc, TCHAR* argv[])
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
 
-	//Get millisecond when process start up
+	//Get millisecond when process starts up.
 	long long pre_ms = GetTickCount64();
 
 
@@ -21,7 +21,7 @@ int main(int argc, TCHAR* argv[])
 	si.cb = sizeof(si);
 	ZeroMemory(&pi, sizeof(pi));
 
-	//Start child process
+	//Start child process.
 	if (argc < 2)
 	 {
 		 std::cout << "Too little argument！" << std::endl;
@@ -50,7 +50,7 @@ int main(int argc, TCHAR* argv[])
 	CloseHandle(pi.hProcess);
 	CloseHandle(pi.hThread);
 
-	//Get time after process finish
+	//Get time after process finish.
 	GetSystemTime(&aft_time);
 	std::cout << "程序结束时间:"<<aft_time.wYear << "年" << aft_time.wMonth << "月" << aft_time.wDay << "日 " << aft_time.wHour << "时" << aft_time.wMinute << "分" << aft_time.wSecond << "秒\n" << std::endl;
 	std::cout <<"程序运行了"<< GetTickCount64()-pre_ms << " 毫秒\n" << std::endl;

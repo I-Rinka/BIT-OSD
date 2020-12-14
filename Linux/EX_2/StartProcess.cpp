@@ -31,12 +31,12 @@ time_t GetMSecond()
 int main(int argc, char const *argv[])
 {
     tm *now_time = GetLocalTime();
+    std::cout << "程序开始运行时间:" << std::endl;
     PrintTime(now_time);
 
-    clock_t pre_clock = clock();
     pid_t pid = fork();
 
-    time_t pre = GetMSecond();
+    time_t pre_ms = GetMSecond();
     if (pid == 0)
     {
         if (argc >= 2)
@@ -60,9 +60,10 @@ int main(int argc, char const *argv[])
         int status;
         wait(&status);
     }
-    std::cout << "程序运行了" << GetMSecond() - pre << "毫秒" << std::endl;
+    std::cout << "程序结束运行时间:" << std::endl;
     now_time = GetLocalTime();
     PrintTime(now_time);
+    std::cout << "程序运行了" << GetMSecond() - pre_ms << "毫秒" << std::endl;
 
     return 0;
 }

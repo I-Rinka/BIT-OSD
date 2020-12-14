@@ -16,7 +16,8 @@
             "name": "Cpp Debug Launch",
             "type": "cppdbg",
             "request": "launch",
-            "args": [],
+            "args": [
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

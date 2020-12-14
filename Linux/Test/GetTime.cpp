@@ -38,13 +38,11 @@ int main(int argc, char const *argv[])
     std::cout << "运行了" << ((clock() - pre_ms)) << "微秒\n"
               << std::endl;
     gettimeofday(&aft_tv, NULL);
-    for (int i = 0; i < 1000; i++)
-    {
-        printf("");
-    }
 
     //gettimeofday的方法得到的微秒会进位到秒 但是好像得不到毫秒
-    std::cout << "运行了" << (aft_tv.tv_sec - pre_tv.tv_sec) * 1000000 + aft_tv.tv_usec - pre_tv.tv_usec << "微秒\n"
+    std::cout << "运行了" << (aft_tv.tv_sec - pre_tv.tv_sec) * 1000000 + aft_tv.tv_usec - pre_tv.tv_usec << "毫秒\n"
+              << std::endl;
+    std::cout << "运行了" << clock()-pre_ms << "微秒\n"
               << std::endl;
 
     return 0;

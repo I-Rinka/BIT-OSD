@@ -55,8 +55,21 @@ int main(int argc, char const *argv[])
 }
 ```
 
-难道不使用
+不使用
 ```cpp
     shmctl(shmid,IPC_RMID,0);
 ```
-删除内存，他就会一直存在？
+删除内存，他就会一直存在
+
+只能通过shell命令
+`ipcrm`来删除
+
+通过这个来查系统的共享内存限制:
+```shell
+> ipcs -lq
+
+------ Messages Limits --------
+max queues system wide = 32000
+max size of message (bytes) = 8192
+default max size of queue (bytes) = 16384
+```

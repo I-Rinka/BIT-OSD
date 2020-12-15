@@ -6,14 +6,6 @@
 #include <sys/wait.h>
 int main(int argc, char const *argv[])
 {
-    // int key = 10;
-    // if (argc >= 2)
-    // {
-    //     key =
-    //         atoi(argv[1]);
-    //     std::cout << key << std::endl;
-    // }
-
     int size_shm = 100;
 
     int m_key = shmget(IPC_PRIVATE, size_shm, IPC_CREAT);
@@ -21,16 +13,9 @@ int main(int argc, char const *argv[])
     if (pt == 0)
     {
         //son
-        std::cout << "son start" << std::endl;
-        int stat;
-        int ppid=getppid();
         sleep(1);
-        std::cout<<"ppid:"<<ppid<<std::endl;
-        waitpid(getppid(), &stat, 0);
-        char *str = (char *)shmat(m_key, NULL, 0);
-        std::cout << str << std::endl;
-        ppid=getppid();//pid24是谁？
-        std::cout<<"ppid:"<<ppid<<std::endl;
+        char *addr = (char *)shmat(m_key, NULL, 0);//这个可能会因为父进程没有把值赋进去而导致输出空值
+        std::cout<<addr<<std::endl;
     }
     else if (pt == -1)
     {
@@ -43,7 +28,7 @@ int main(int argc, char const *argv[])
         //parent
         std::cout << "m_key:" << m_key << std::endl;
         char *str = (char *)shmat(m_key, NULL, 0);
-        strncpy(str, "Hello! My son! --from father", size_shm);
+        strncpy(str, "WTF?", size_shm);
         // int status;
         // wait(&status);
     }

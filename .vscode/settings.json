@@ -87,7 +87,10 @@
         "ios": "cpp",
         "locale": "cpp",
         "queue": "cpp",
-        "stack": "cpp"
+        "stack": "cpp",
+        "rb_tree": "cpp",
+        "rope": "cpp",
+        "slist": "cpp"
     },
     "python.pythonPath": "C:\\ProgramData\\Anaconda3\\python.exe",
     "python.linting.pylintEnabled": true,

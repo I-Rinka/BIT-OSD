@@ -69,10 +69,10 @@ int main(int argc, char const *argv[])
         P(empty_i);
         P(mutex_i);
         
+        cout << "A Producer join in!" << endl;
         PrintBuffer(BUFFER);
         //放入字符
         BUFFER[*pt] = c;
-        cout << "A Producer join in!" << endl;
         cout << "puted:" << c << endl;
         //修改指针
         *pt = (*pt + 1) % BUFFER_SIZE;

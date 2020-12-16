@@ -69,7 +69,7 @@ int main(int argc, char const *argv[])
         cout << "A Consumer join in!" << endl;
         PrintBuffer(BUFFER);
         //打印，修改指针
-        cout << "geted:" << BUFFER[*pt] << endl;
+        cout << "get:" << BUFFER[*pt] << endl;
         BUFFER[*pt] = '/';
         *pt = (*pt + 1) % BUFFER_SIZE;
         PrintBuffer(BUFFER);

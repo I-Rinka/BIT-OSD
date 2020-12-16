@@ -73,7 +73,7 @@ int main(int argc, char const *argv[])
         PrintBuffer(BUFFER);
         //放入字符
         BUFFER[*pt] = c;
-        cout << "puted:" << c << endl;
+        cout << "put:" << c << endl;
         //修改指针
         *pt = (*pt + 1) % BUFFER_SIZE;
         PrintBuffer(BUFFER);

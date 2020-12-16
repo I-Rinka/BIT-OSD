@@ -6,6 +6,7 @@
 #include <string>
 #include <cstring>
 using namespace std;
+//todo:找到建立新路径的方法
 void SwitchType(const char *path);
 
 void OpDir(const char *path)
@@ -46,6 +47,7 @@ void SwitchType(const char *path)
     if (S_ISDIR(a.st_mode))
     {
         cout << "This is a directory" << endl;
+        // cout << a.st_mode << endl;
         cout << a.st_mode << endl;
         //先建一个文件夹？
         OpDir(path);

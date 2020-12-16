@@ -19,6 +19,7 @@ int main(int argc, char const *argv[])
     }
     else
     {
+        // MoveFile("/root/Dev/BIT-OSD/Linux/EX_3", "/root/Dev/BIT-OSD");
         cout << "Too little argument!" << endl;
     }
 
@@ -29,7 +30,7 @@ void MoveFile(const char *path, const char *dest_path)
     struct stat a;
     stat(path, &a);
     const char *file_name = basename(path);
-    char *new_dest = (char *)calloc(strnlen(file_name, MAX_INPUT) + strnlen(dest_path, MAX_INPUT), sizeof(char));
+    char *new_dest = (char *)calloc(MAX_INPUT * 4, sizeof(char));
     strcpy(new_dest, dest_path);
     strcat(new_dest, "/");
     strcat(new_dest, file_name);
@@ -41,8 +42,7 @@ void MoveFile(const char *path, const char *dest_path)
         //在目标新建一个地址
         //递归调用这个函数
         DIR *dir = opendir(path);
-        cout << "content in " << path << ":" << endl;
-        char *new_path = (char *)calloc(MAX_INPUT + 4, sizeof(char));
+        char *new_path = (char *)calloc(MAX_INPUT * 4, sizeof(char));
         while (true)
         {
             dirent *d = readdir(dir);
@@ -53,13 +53,12 @@ void MoveFile(const char *path, const char *dest_path)
                 {
                     break;
                 }
-                // cout << d->d_name << endl;
                 strncpy(new_path, path, strlen(path));
                 strcat(new_path, "/");
                 strncat(new_path, d->d_name, strlen(d->d_name));
-                cout << "new_path:" << new_path << endl; //递归成功
                 //对文件夹中的文件操作
                 MoveFile(new_path, new_dest);
+                memset(new_path, 0, MAX_INPUT + 4);
             }
             else
             {
@@ -68,20 +67,33 @@ void MoveFile(const char *path, const char *dest_path)
         }
         free(new_path);
     }
-
     else if (S_ISLNK(a.st_mode))
     {
         //软链接 待测试
         char *linked_path = (char *)calloc(MAX_INPUT, sizeof(char));
         readlink(path, linked_path, MAX_INPUT);
         symlink(linked_path, new_dest);
+        free(linked_path);
     }
     else if (S_ISREG(a.st_mode))
     {
         //普通文件
         creat(new_dest, a.st_mode);
-
-        //缺少复制操作
+        int file_old = open(path, O_RDONLY);
+        int file_new = open(new_dest, O_WRONLY);
+        int bt_read = 0;
+        char buffer[MAX_INPUT];
+        while (true)
+        {
+            bt_read = read(file_old, buffer, MAX_INPUT);
+            write(file_new, buffer, bt_read);
+            if (bt_read == 0)
+            {
+                break;
+            }
+        }
+        close(file_old);
+        close(file_new);
     }
     free(new_dest);
 }

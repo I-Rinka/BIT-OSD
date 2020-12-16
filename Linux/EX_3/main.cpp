@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 #include <stdlib.h>
+#include <wait.h>
 
 #define CACHE_SIZE 4
 #define CONSUMER_NUM 4
@@ -50,6 +51,11 @@ int main(int argc, char const *argv[])
     //初始化信号量
     SEMID = semget(IPC_PRIVATE, 3, IPC_CREAT | IPC_EXCL);
 
+    //给资源量初始化
+    semctl(SEMID, mutex_i, SETVAL, 1);
+    semctl(SEMID, full_i, SETVAL, 0);
+    semctl(SEMID, empty_i, SETVAL, CACHE_SIZE);
+
     //只要有一个步骤没成功，这个实验就不用做了
     if (CHACHE_SHMID == -1 || POINTER_SHMID == -1 || SEMID == -1)
     {
@@ -68,7 +74,14 @@ int main(int argc, char const *argv[])
     {
         CreateProcess("Producer.out");
     }
-    
+
+    int status;
+    //因为一共创建了7个子进程，所以要等7下
+    for (int i = 0; i < 7; i++)
+    {
+        wait(&status);
+    }
+
     //程序结束，回收资源
     cout << "Stimulation end" << endl;
     shmctl(CHACHE_SHMID, IPC_RMID, NULL);

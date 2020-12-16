@@ -39,7 +39,7 @@ void V(int i)
 
 int main(int argc, char const *argv[])
 {
-    cout << "I'm Producer!" << endl;
+    // cout << "I'm Producer!" << endl;
     //初始化
     CHACHE_SHMID = atoi(argv[0]);
     POINTER_SHMID = atoi(argv[1]);
@@ -55,7 +55,7 @@ int main(int argc, char const *argv[])
     {
         srand(clock());
         //随机睡眠
-        sleep(rand() % 2);
+        sleep(rand() % 3);
         //随机选一个字母提交
         char c = NAME[rand() % 3];
 

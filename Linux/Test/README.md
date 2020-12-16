@@ -75,3 +75,7 @@ default max size of queue (bytes) = 16384
 ```
 
 可以通过P操作的代码`Linux/Test/Sema_opP.cpp`和V操作的代码`Linux/Test/Sema_opV.cpp`模拟PV操作
+
+---
+wait()不对睡眠的子进程奏效？即使子进程处于睡眠状态，wait也依然可能认为子进程其实是结束了的？
+> 一个wait只等一个子进程

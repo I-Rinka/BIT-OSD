@@ -39,8 +39,7 @@ void V(int i)
 
 int main(int argc, char const *argv[])
 {
-    cout << "I'm Consumer!" << endl;
-
+    // cout << "I'm Consumer!" << endl;
     //初始化
     CHACHE_SHMID = atoi(argv[0]);
     POINTER_SHMID = atoi(argv[1]);
@@ -53,7 +52,7 @@ int main(int argc, char const *argv[])
     {
         srand(clock());
         //随机睡眠
-        sleep(rand() % 2);
+        sleep(rand() % 3);
         //P full
         P(full_i);
 
@@ -61,10 +60,9 @@ int main(int argc, char const *argv[])
         P(mutex_i);
 
         //打印，修改指针
-        cout << "geted" << cache[*pt] << endl;
+        cout << "geted:" << cache[*pt] << endl;
         cache[*pt] = '/';
         *pt = (*pt + 1) % CACHE_SIZE;
-
         //V empty
         V(empty_i);
         //V mutex

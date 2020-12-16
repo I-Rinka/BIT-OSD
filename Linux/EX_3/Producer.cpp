@@ -39,8 +39,7 @@ void V(int i)
 
 int main(int argc, char const *argv[])
 {
-    cout << "I'm Consumer!" << endl;
-
+    cout << "I'm Producer!" << endl;
     //初始化
     CHACHE_SHMID = atoi(argv[0]);
     POINTER_SHMID = atoi(argv[1]);
@@ -48,27 +47,29 @@ int main(int argc, char const *argv[])
 
     int *pt = (int *)shmat(POINTER_SHMID, NULL, 0);
     char *cache = (char *)shmat(CHACHE_SHMID, NULL, 0);
+    pt = pt + 1;
 
-    for (int i = 0; i < 3; i++)
+    const char *NAME = "WZC";
+
+    for (int i = 0; i < 4; i++)
     {
         srand(clock());
         //随机睡眠
         sleep(rand() % 2);
-        //P full
-        P(full_i);
+        //随机选一个字母提交
+        char c = NAME[rand() % 3];
 
-        //P mutex
+        P(empty_i);
         P(mutex_i);
-
-        //打印，修改指针
-        cout << "geted" << cache[*pt] << endl;
-        cache[*pt] = '/';
+        //放入字符
+        cache[*pt] = c;
+        cout << "puted:" << c << endl;
+        //修改指针
         *pt = (*pt + 1) % CACHE_SIZE;
 
-        //V empty
-        V(empty_i);
-        //V mutex
+        V(full_i);
         V(mutex_i);
     }
+
     return 0;
 }

@@ -73,3 +73,5 @@ max queues system wide = 32000
 max size of message (bytes) = 8192
 default max size of queue (bytes) = 16384
 ```
+
+可以通过P操作的代码`Linux/Test/Sema_opP.cpp`和V操作的代码`Linux/Test/Sema_opV.cpp`模拟PV操作

@@ -46,7 +46,7 @@ int main(int argc, char const *argv[])
     //初始化队列指针
     int *pt = (int *)shmat(POINTER_SHMID, NULL, 0);
     *pt = 0;
-    *(pt + 1) = 0;
+    *(pt + 1) = 0;//第一个指针供消费者使用，第二个指针供生产者使用
 
     //初始化信号量
     SEMID = semget(IPC_PRIVATE, 3, IPC_CREAT | IPC_EXCL);

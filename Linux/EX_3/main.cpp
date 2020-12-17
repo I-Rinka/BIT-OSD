@@ -45,6 +45,7 @@ int CreateProcess(const char *processPath)
         perror("Create Process Failed\n");
         exit(EXIT_FAILURE);
     }
+    return 0;
 }
 int main(int argc, char const *argv[])
 {

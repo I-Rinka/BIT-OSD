@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="StartProcess.cpp">
+    <ClCompile Include="EX_3\Producer_Consumer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

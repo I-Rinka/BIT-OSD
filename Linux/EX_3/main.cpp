@@ -95,7 +95,7 @@ int main(int argc, char const *argv[])
     }
 
     //程序结束，回收资源
-    cout << "Stimulation end" << endl;
+    cout << "Simulation end" << endl;
     shmctl(BUFFER_SHMID, IPC_RMID, NULL);
     shmctl(POINTER_SHMID, IPC_RMID, NULL);
     semctl(SEMID, 0, IPC_RMID);

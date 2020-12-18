@@ -28,6 +28,7 @@
                 {
                     // "description": "为 gdb 启用整齐打印",
                     "text": "-enable-pretty-printing",
+                    "text": "-gdb-set follow-fork-mode child",
                     "ignoreFailures": true
                 }
             ],

@@ -23,14 +23,15 @@ void PrintBuffer(char *buffer_addr)
     cout << buffer_addr << endl;
 }
 
-void ResetPointer()
+void ResetPointer(int x, int y)
 {
+
     CONSOLE_CURSOR_INFO console_cursor_info;
     console_cursor_info.bVisible = false;
     console_cursor_info.dwSize = 100;
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleCursorInfo(hConsole, &console_cursor_info);
-    COORD coordScreen = {0, 0};
+    COORD coordScreen = {x, y};
     SetConsoleCursorPosition(hConsole, coordScreen);
 }
 
@@ -70,6 +71,7 @@ int main_parent()
 
     HANDLE h_mMutex = CreateSemaphore(NULL, 1, 1, SM_MUTEX_NAME);
 
+    system("cls");
     //4个消费者，3个生产者
     HANDLE h_Processes[7];
     for (int i = 0; i < 4; i++)
@@ -78,7 +80,6 @@ int main_parent()
     }
     for (int i = 4; i < 7; i++)
     {
-        PrintBuffer(shm_addr);
         h_Processes[i] = (CreateChildProcess(PRODUCER_PROCESS)).hProcess;
     }
     WaitForMultipleObjects(7, h_Processes, true, INFINITE);
@@ -97,26 +98,35 @@ int main_consumer()
     HANDLE h_sEmpty = OpenSemaphore(SEMAPHORE_ALL_ACCESS, TRUE, SE_EMPTY_NAME);
     HANDLE h_mMutex = OpenSemaphore(SEMAPHORE_ALL_ACCESS, TRUE, SM_MUTEX_NAME);
 
-    //开始循环
+    //得到当前光标坐标
+    HANDLE hStdout;
+    CONSOLE_SCREEN_BUFFER_INFO pBuffer;
+    hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
 
+    //开始循环
     for (int i = 0; i < 3; i++)
     {
+        GetConsoleScreenBufferInfo(hStdout, &pBuffer);
         srand(GetTickCount());
         Sleep((rand() % 3) * 1000);
         //申请一个full
         WaitForSingleObject(h_sFull, INFINITE);
         //申请进入缓冲区
         WaitForSingleObject(h_mMutex, INFINITE);
+        Sleep(1000);
 
-        PrintBuffer(buffer_addr);
         //取数，改指针
         cout << "A Consumer joined!" << endl;
+        // PrintBuffer(buffer_addr);
+        Sleep(100);
         cout << "get:" << buffer_addr[*pointer_addr] << endl;
         buffer_addr[*pointer_addr] = '/';
         *pointer_addr = (*pointer_addr + 1) % BUFFER_SIZE;
 
+        Sleep(100);
         PrintBuffer(buffer_addr);
-        cout << "----------" << endl;
+
+        ResetPointer(pBuffer.dwCursorPosition.X, pBuffer.dwCursorPosition.Y);
 
         //释放一个empty
         ReleaseSemaphore(h_sEmpty, 1, NULL);
@@ -146,29 +156,38 @@ int main_producer()
 
     const char *WZC = "WZC";
 
+    //得到当前光标坐标
+    HANDLE hStdout;
+    CONSOLE_SCREEN_BUFFER_INFO pBuffer;
+    hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+
     //开始循环
     for (int i = 0; i < 4; i++)
     {
+        GetConsoleScreenBufferInfo(hStdout, &pBuffer);
         srand(GetTickCount());
         Sleep((rand() % 3) * 1000);
         //申请一个full
         WaitForSingleObject(h_sEmpty, INFINITE);
         //申请进入缓冲区
         WaitForSingleObject(h_mMutex, INFINITE);
-
-        PrintBuffer(buffer_addr);
+        Sleep(1000);
 
         //取数，改指针
         cout << "A Producer joined!" << endl;
+        // PrintBuffer(buffer_addr);
         int put_index = rand() % 3;
+        Sleep(100);
         cout << "put:" << WZC[put_index] << endl;
         buffer_addr[*pointer_addr] = WZC[put_index];
         *pointer_addr = (*pointer_addr + 1) % BUFFER_SIZE;
-
+        Sleep(100);
         PrintBuffer(buffer_addr);
-        cout << "----------" << endl;
+
+        ResetPointer(pBuffer.dwCursorPosition.X, pBuffer.dwCursorPosition.Y);
 
         //释放一个Full
+
         ReleaseSemaphore(h_sFull, 1, NULL);
         //退出缓冲区
         ReleaseSemaphore(h_mMutex, 1, NULL);

@@ -20,11 +20,18 @@ enum
 
 void PrintBuffer(char *buffer_addr)
 {
-    for (int i = 0; i < BUFFER_SIZE; i++)
-    {
-        cout << buffer_addr[i];
-    }
-    cout << endl;
+    cout << buffer_addr << endl;
+}
+
+void ResetPointer()
+{
+    CONSOLE_CURSOR_INFO console_cursor_info;
+    console_cursor_info.bVisible = false;
+    console_cursor_info.dwSize = 100;
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleCursorInfo(hConsole, &console_cursor_info);
+    COORD coordScreen = {0, 0};
+    SetConsoleCursorPosition(hConsole, coordScreen);
 }
 
 PROCESS_INFORMATION CreateChildProcess(int process_token)
@@ -39,23 +46,21 @@ PROCESS_INFORMATION CreateChildProcess(int process_token)
     GetCurrentDirectory(1000, cd);
     sprintf_s(c_cmd, 100, "%ld %d", GetCurrentProcessId(), process_token);
 
-    CreateProcess(TEXT(ARGV[0]), TEXT(c_cmd), NULL, NULL, TRUE, 0, NULL, cd, &si, &pi);
+    CreateProcess(TEXT(ARGV[0]), TEXT(c_cmd), NULL, NULL, FALSE, 0, NULL, cd, &si, &pi);
     return pi;
 }
 
 int main_parent()
 {
-    cout << PARENT_PROCESS << endl;
-
     //初始化
     //创建共享内存
     HANDLE h_FM = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_EXECUTE_READWRITE, 0, BUFFER_SIZE, SH_MEMORY_NAME);
     char *shm_addr = (char *)MapViewOfFile(h_FM, FILE_MAP_ALL_ACCESS, 0, 0, BUFFER_SIZE);
     memset(shm_addr, '/', BUFFER_SIZE);
-    PrintBuffer(shm_addr);
+
     //队列指针也是共享的，第一个给消费者用，第二个给生产者用
     HANDLE h_P = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_EXECUTE_READWRITE, 0, sizeof(int) * 2, SH_POINTER_NAME);
-    int *shp_addr = (int *)MapViewOfFile(h_FM, FILE_MAP_ALL_ACCESS, 0, 0, (sizeof(int) * 2));
+    int *shp_addr = (int *)MapViewOfFile(h_P, FILE_MAP_ALL_ACCESS, 0, 0, (sizeof(int) * 2));
     shp_addr[0] = 0;
     shp_addr[1] = 0;
 
@@ -63,7 +68,7 @@ int main_parent()
     HANDLE h_sFull = CreateSemaphore(NULL, 0, BUFFER_SIZE, SE_FULL_NAME);
     HANDLE h_sEmpty = CreateSemaphore(NULL, BUFFER_SIZE, BUFFER_SIZE, SE_EMPTY_NAME);
 
-    HANDLE h_mMutex = CreateMutex(NULL, TRUE, SM_MUTEX_NAME);
+    HANDLE h_mMutex = CreateSemaphore(NULL, 1, 1, SM_MUTEX_NAME);
 
     //4个消费者，3个生产者
     HANDLE h_Processes[7];
@@ -73,6 +78,7 @@ int main_parent()
     }
     for (int i = 4; i < 7; i++)
     {
+        PrintBuffer(shm_addr);
         h_Processes[i] = (CreateChildProcess(PRODUCER_PROCESS)).hProcess;
     }
     WaitForMultipleObjects(7, h_Processes, true, INFINITE);
@@ -81,17 +87,15 @@ int main_parent()
 
 int main_consumer()
 {
-    cout << CONSUMER_PROCESS << endl;
-
     HANDLE h_FM = OpenFileMapping(FILE_MAP_ALL_ACCESS, TRUE, SH_MEMORY_NAME);
     HANDLE h_P = OpenFileMapping(FILE_MAP_ALL_ACCESS, TRUE, SH_POINTER_NAME);
 
     char *buffer_addr = (char *)MapViewOfFile(h_FM, FILE_MAP_ALL_ACCESS, 0, 0, BUFFER_SIZE);
     int *pointer_addr = (int *)MapViewOfFile(h_P, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(int));
 
-    HANDLE h_sFull = OpenSemaphore(NULL, TRUE, SE_FULL_NAME);
-    HANDLE h_sEmpty = OpenSemaphore(NULL, TRUE, SE_EMPTY_NAME);
-    HANDLE h_mMutex = OpenMutex(NULL, TRUE, SM_MUTEX_NAME);
+    HANDLE h_sFull = OpenSemaphore(SEMAPHORE_ALL_ACCESS, TRUE, SE_FULL_NAME);
+    HANDLE h_sEmpty = OpenSemaphore(SEMAPHORE_ALL_ACCESS, TRUE, SE_EMPTY_NAME);
+    HANDLE h_mMutex = OpenSemaphore(SEMAPHORE_ALL_ACCESS, TRUE, SM_MUTEX_NAME);
 
     //开始循环
 
@@ -100,7 +104,7 @@ int main_consumer()
         srand(GetTickCount());
         Sleep((rand() % 3) * 1000);
         //申请一个full
-        cout << WaitForSingleObject(h_sFull, INFINITE);
+        WaitForSingleObject(h_sFull, INFINITE);
         //申请进入缓冲区
         WaitForSingleObject(h_mMutex, INFINITE);
 
@@ -112,12 +116,12 @@ int main_consumer()
         *pointer_addr = (*pointer_addr + 1) % BUFFER_SIZE;
 
         PrintBuffer(buffer_addr);
+        cout << "----------" << endl;
 
         //释放一个empty
         ReleaseSemaphore(h_sEmpty, 1, NULL);
         //退出缓冲区
-        ReleaseMutex(h_mMutex);
-        Sleep(1000);
+        ReleaseSemaphore(h_mMutex, 1, NULL);
     }
     CloseHandle(h_mMutex);
     CloseHandle(h_sEmpty);
@@ -128,19 +132,17 @@ int main_consumer()
 
 int main_producer()
 {
-    cout << PRODUCER_PROCESS << endl;
-
-    cout << CONSUMER_PROCESS << endl;
 
     HANDLE h_FM = OpenFileMapping(FILE_MAP_ALL_ACCESS, TRUE, SH_MEMORY_NAME);
     HANDLE h_P = OpenFileMapping(FILE_MAP_ALL_ACCESS, TRUE, SH_POINTER_NAME);
 
     char *buffer_addr = (char *)MapViewOfFile(h_FM, FILE_MAP_ALL_ACCESS, 0, 0, BUFFER_SIZE);
     int *pointer_addr = (int *)MapViewOfFile(h_P, FILE_MAP_ALL_ACCESS, 0, 0, (sizeof(int) * 2));
+
     pointer_addr += 1;
-    HANDLE h_sFull = OpenSemaphore(NULL, TRUE, SE_FULL_NAME);
-    HANDLE h_sEmpty = OpenSemaphore(NULL, TRUE, SE_EMPTY_NAME);
-    HANDLE h_mMutex = OpenMutex(NULL, TRUE, SM_MUTEX_NAME);
+    HANDLE h_sFull = OpenSemaphore(SEMAPHORE_ALL_ACCESS, TRUE, SE_FULL_NAME);
+    HANDLE h_sEmpty = OpenSemaphore(SEMAPHORE_ALL_ACCESS, TRUE, SE_EMPTY_NAME);
+    HANDLE h_mMutex = OpenSemaphore(SEMAPHORE_ALL_ACCESS, TRUE, SM_MUTEX_NAME);
 
     const char *WZC = "WZC";
 
@@ -155,21 +157,21 @@ int main_producer()
         WaitForSingleObject(h_mMutex, INFINITE);
 
         PrintBuffer(buffer_addr);
+
         //取数，改指针
         cout << "A Producer joined!" << endl;
         int put_index = rand() % 3;
         cout << "put:" << WZC[put_index] << endl;
         buffer_addr[*pointer_addr] = WZC[put_index];
-        cout << buffer_addr[*pointer_addr];
         *pointer_addr = (*pointer_addr + 1) % BUFFER_SIZE;
 
         PrintBuffer(buffer_addr);
+        cout << "----------" << endl;
 
         //释放一个Full
         ReleaseSemaphore(h_sFull, 1, NULL);
         //退出缓冲区
-        ReleaseMutex(h_mMutex);
-        Sleep(1000);
+        ReleaseSemaphore(h_mMutex, 1, NULL);
     }
     CloseHandle(h_mMutex);
     CloseHandle(h_sEmpty);

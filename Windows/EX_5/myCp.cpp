@@ -46,8 +46,13 @@ int CopyFile(const char *source_file, const char *dest_path)
         }
 
         int len = strnlen(source_file_dir, MAX_PATH) - 1;
-        while (true)
+        do
         {
+            if (strncmp("..", find_data.cFileName, 3) == 0 || strncmp(".", find_data.cFileName, 2) == 0)
+            {
+                break;
+            }
+
             memset(source_file_dir + len, 0, MAX_PATH - len);
             strncat(source_file_dir, find_data.cFileName, MAX_PATH); //改造后source_file_dir就变成了文件的名字
 
@@ -55,11 +60,8 @@ int CopyFile(const char *source_file, const char *dest_path)
             {
                 cout << "Copy " << source_file_dir << " error" << endl;
             }
-            if (FindNextFile(hfind, &find_data) == 0 || strncmp("..", find_data.cFileName, 3) == 0 || strncmp(".", find_data.cFileName, 2) == 0)
-            {
-                break;
-            }
-        }
+        } while (FindNextFile(hfind, &find_data) != 0);
+
         FindClose(hfind);
     }
     else

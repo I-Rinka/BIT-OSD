@@ -9,7 +9,7 @@
 #include <sys/time.h>
 #define MAX_PATH_LENGTH 100
 using namespace std;
-void MoveFile(const char *path, const char *dest_path);
+int MoveFile(const char *path, const char *dest_path);
 int main(int argc, char const *argv[])
 {
     if (argc >= 3)
@@ -24,15 +24,21 @@ int main(int argc, char const *argv[])
 
     return 0;
 }
-void MoveFile(const char *path, const char *dest_path)
+int MoveFile(const char *path, const char *dest_path)
 {
     struct stat st;
     lstat(path, &st); //为了打开链接文件本身，使用lstat
     const char *file_name = basename(path);
-    char *new_dest = (char *)calloc(MAX_PATH_LENGTH, sizeof(char));
-    strncpy(new_dest, dest_path, MAX_PATH_LENGTH);
-    strncat(new_dest, "/", MAX_PATH_LENGTH);
-    strncat(new_dest, file_name, MAX_PATH_LENGTH);
+    char *new_dest = (char *)calloc(MAX_PATH_LENGTH, sizeof(char)); //new_dest是文件要移动到的目录
+    if (new_dest == NULL || file_name == NULL)
+    {
+        perror("string alloc failed\n");
+        return -1;
+    }
+
+    strncpy(new_dest, dest_path, MAX_PATH_LENGTH / 2);
+    strncat(new_dest, "/", 1);
+    strncat(new_dest, file_name, MAX_PATH_LENGTH / 2);
 
     //目录操作
     if (S_ISDIR(st.st_mode))
@@ -40,37 +46,57 @@ void MoveFile(const char *path, const char *dest_path)
         //在目标新建一个地址
         mkdir(new_dest, st.st_mode);
         //对目录里面的文件递归调用MoveFile
-        DIR *dir = opendir(path);
-        char *new_path = (char *)calloc(MAX_PATH_LENGTH, sizeof(char));
+        DIR *dir = opendir(path);                                             //这个目录很可能打不开
+        char *recursive_path = (char *)calloc(MAX_PATH_LENGTH, sizeof(char)); //recursive_path用于二级文件等的递归调用
+        if (recursive_path == NULL)
+        {
+            perror("string alloc failed\n");
+            return -1;
+        }
+        if (dir == NULL) //目录没打开
+        {
+            cout << "open" << path << "failed" << endl;
+            return -1;
+        }
+
         while (true)
         {
             dirent *d = readdir(dir);
             //d是游标，用来获取文件名
             if (d != 0)
             {
-                //..的意思是读到了上一个文件夹，我们不需要
-                if (strncmp(d->d_name, "..", 3) == 0)
+                //读到..和.的意思是读到了当前文件夹，我们不需要也无法移动它们
+                if (strncmp(d->d_name, "..", 3) == 0 || strncmp(d->d_name, ".", 2) == 0)
                 {
                     break;
                 }
-                strncpy(new_path, path, MAX_PATH_LENGTH);
-                strncat(new_path, "/", MAX_PATH_LENGTH);
-                strncat(new_path, d->d_name, MAX_PATH_LENGTH);
+                strncpy(recursive_path, path, MAX_PATH_LENGTH / 2);
+                strncat(recursive_path, "/", 1);
+                strncat(recursive_path, d->d_name, MAX_PATH_LENGTH / 2);
                 //对文件夹中的文件操作
-                MoveFile(new_path, new_dest);
-                memset(new_path, 0, MAX_PATH_LENGTH);
+                if (MoveFile(recursive_path, new_dest) == -1)
+                {
+                    cout << "move file from " << recursive_path << "to" << new_dest << "failed" << endl;
+                }
+                memset(recursive_path, 0, MAX_PATH_LENGTH);
             }
             else
             {
                 break;
             }
         }
-        free(new_path);
+        free(recursive_path);
     }
     //软链接操作 待测试
     else if (S_ISLNK(st.st_mode))
     {
         char *linked_path = (char *)calloc(MAX_PATH_LENGTH, sizeof(char));
+        if (linked_path == NULL)
+        {
+            perror("string alloc failed\n");
+            return -1;
+        }
+
         readlink(path, linked_path, MAX_PATH_LENGTH);
         symlink(linked_path, new_dest);
         free(linked_path);
@@ -109,4 +135,5 @@ void MoveFile(const char *path, const char *dest_path)
     }
 
     free(new_dest);
+    return 0;
 }

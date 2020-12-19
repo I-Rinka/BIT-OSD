@@ -11,6 +11,8 @@ using namespace std;
 //setinformation来更改时间戳
 //关闭句柄
 
+//已知ISSUE：Windows的“绝对路径命名空间”还未掌握（跨盘符复制未实现）; 文件夹时间戳未能成功更改
+
 const char *GetBaseName(const char *file_path)
 {
     int len = strlen(file_path) - 1;
@@ -54,7 +56,7 @@ int CopyFile(const char *source_file, const char *dest_path)
             }
 
             memset(source_file_dir + len, 0, MAX_PATH - len);
-            strncat(source_file_dir, find_data.cFileName, MAX_PATH); //改造后source_file_dir就变成了文件的名字
+            strncat(source_file_dir, find_data.cFileName, MAX_PATH); //改造后source_file_dir就变成了需要复制文件的路径
 
             if (CopyFile(source_file_dir, dest_file) != 0)
             {
@@ -66,7 +68,7 @@ int CopyFile(const char *source_file, const char *dest_path)
     }
     else
     {
-        //一般文件
+        //一般文件直接复制
         if (!CopyFileEx(source_file, dest_file, NULL, NULL, NULL, 0x800)) //0x800是COPY_FILE_COPY_SYMLINK，但是Mingw不支持
         {
             return -1;
@@ -75,6 +77,17 @@ int CopyFile(const char *source_file, const char *dest_path)
 
     //改时间戳
     HANDLE source_file_h = CreateFile(source_file, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE dest_file_h = CreateFile(dest_file, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (source_file_h == INVALID_HANDLE_VALUE || dest_file_h == INVALID_HANDLE_VALUE)
+    {
+        cout << "Open file Handle failed" << endl;
+        return -1;
+    }
+    BY_HANDLE_FILE_INFORMATION file_info;
+    GetFileInformationByHandle(source_file_h, &file_info);
+    SetFileTime(dest_file_h, &file_info.ftCreationTime, &file_info.ftLastAccessTime, &file_info.ftLastWriteTime);
+    CloseHandle(source_file_h);
+    CloseHandle(dest_file_h);
     return 0;
 }
 int main(int argc, char const *argv[])

@@ -1,40 +1,121 @@
 #include <windows.h>
 #include <stdio.h>
-#include <restartmanager.h>
+#include <tchar.h>
+#include <string.h>
+#include <psapi.h>
+#include <strsafe.h>
 
-int main(void)
+#define BUFSIZE 512
+
+BOOL GetFileNameFromHandle(HANDLE hFile)
 {
-	HANDLE hFile;
-	FILE_NAME_INFO* FileInformation;
-	LPCTSTR fname = "foo.log";
-	int err = 0;
-	size_t size = sizeof(FILE_NAME_INFO) + sizeof(WCHAR) * MAX_PATH;
+    BOOL bSuccess = FALSE;
+    TCHAR pszFilename[MAX_PATH + 1];
+    HANDLE hFileMap;
 
-	hFile = CreateFile(fname, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_ATTRIBUTE_ARCHIVE | SECURITY_IMPERSONATION, NULL);
+    // Get the file size.
+    DWORD dwFileSizeHi = 0;
+    DWORD dwFileSizeLo = GetFileSize(hFile, &dwFileSizeHi);
 
-	if (hFile == INVALID_HANDLE_VALUE)
-		printf("Could not open %s file, error %d\n", fname, GetLastError());
-	else
-	{
-		printf("File's HANDLE [%s] handle %d size %d MAX_PATH %d sizeof %d is OK!\n", fname, hFile, size, MAX_PATH, sizeof(FILE_NAME_INFO));
+    if (dwFileSizeLo == 0 && dwFileSizeHi == 0)
+    {
+        _tprintf(TEXT("Cannot map a file with a length of zero.\n"));
+        return FALSE;
+    }
 
-		FileInformation = (FILE_NAME_INFO*)(malloc(size));
-		FileInformation->FileNameLength = MAX_PATH;
+    // Create a file mapping object.
+    hFileMap = CreateFileMapping(hFile,
+        NULL,
+        PAGE_READONLY,
+        0,
+        1,
+        NULL);
 
-		if (!GetFileInformationByHandleEx(hFile, FileNameInfo, FileInformation, size))
-		{
-			err = GetLastError();
-			printf("GetFileInformationByHandleEx failed hFile %d FileName is [%S], err %d, %e\n", hFile, FileInformation->FileName, err, err);
-		}
-		else
-		{
-			printf("File Name is [%s] Length %d\n", FileInformation->FileName, FileInformation->FileNameLength);
-		}
+    if (hFileMap)
+    {
+        // Create a file mapping to get the file name.
+        void* pMem = MapViewOfFile(hFileMap, FILE_MAP_READ, 0, 0, 1);
 
-	}
+        if (pMem)
+        {
+            if (GetMappedFileName(GetCurrentProcess(),
+                pMem,
+                pszFilename,
+                MAX_PATH))
+            {
 
-	CloseHandle(hFile);
-	DeleteFile(fname);
-	system("pause");
-	return 0;
+                // Translate path with device name to drive letters.
+                TCHAR szTemp[BUFSIZE];
+                szTemp[0] = '\0';
+
+                if (GetLogicalDriveStrings(BUFSIZE - 1, szTemp))
+                {
+                    TCHAR szName[MAX_PATH];
+                    TCHAR szDrive[3] = TEXT(" :");
+                    BOOL bFound = FALSE;
+                    TCHAR* p = szTemp;
+
+                    do
+                    {
+                        // Copy the drive letter to the template string
+                        *szDrive = *p;
+
+                        // Look up each device name
+                        if (QueryDosDevice(szDrive, szName, MAX_PATH))
+                        {
+                            size_t uNameLen = _tcslen(szName);
+
+                            if (uNameLen < MAX_PATH)
+                            {
+                                bFound = _tcsnicmp(pszFilename, szName, uNameLen) == 0
+                                    && *(pszFilename + uNameLen) == _T('\\');
+
+                                if (bFound)
+                                {
+                                    // Reconstruct pszFilename using szTempFile
+                                    // Replace device path with DOS path
+                                    TCHAR szTempFile[MAX_PATH];
+                                    StringCchPrintf(szTempFile,
+                                        MAX_PATH,
+                                        TEXT("%s%s"),
+                                        szDrive,
+                                        pszFilename + uNameLen);
+                                    StringCchCopyN(pszFilename, MAX_PATH + 1, szTempFile, _tcslen(szTempFile));
+                                }
+                            }
+                        }
+
+                        // Go to the next NULL character.
+                        while (*p++);
+                    } while (!bFound && *p); // end of string
+                }
+            }
+            bSuccess = TRUE;
+            UnmapViewOfFile(pMem);
+        }
+
+        CloseHandle(hFileMap);
+    }
+    _tprintf(TEXT("File name is %s\n"), pszFilename);
+    return(bSuccess);
+}
+
+int _tmain(int argc, TCHAR* argv[])
+{
+    HANDLE hFile;
+
+    if (argc != 2)
+    {
+        _tprintf(TEXT("This sample takes a file name as a parameter.\n"));
+        return 0;
+    }
+    hFile = CreateFile(argv[1], GENERIC_READ, FILE_SHARE_READ, NULL,
+        OPEN_EXISTING, 0, NULL);
+
+    if (hFile == INVALID_HANDLE_VALUE)
+    {
+        _tprintf(TEXT("CreateFile failed with %d\n"), GetLastError());
+        return 0;
+    }
+    GetFileNameFromHandle(hFile);
 }

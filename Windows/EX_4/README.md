@@ -1,3 +1,3 @@
-# **这个实验，请拿Visual Studio写**
+这个实验有不属于Windows.h的win32 api
 
-MingW几乎无法使用所有的关键函数
+程序步骤写在了源文件注释中

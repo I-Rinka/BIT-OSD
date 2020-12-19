@@ -18,7 +18,7 @@ https://docs.microsoft.com/en-us/windows/win32/fileio/opening-a-file-for-reading
 
 文件夹也通过这个操作，但是打开后的文件属性不同，操作也不同。 
 
-
+`FindNextFile()`从`FindFirstFile()`处获得句柄，然后往后依次查找得到文件夹下的文件
 
 这个最好使用Visual Studio写
 

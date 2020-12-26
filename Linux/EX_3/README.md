@@ -11,3 +11,9 @@
 *IPC类型由UNIX System V引入，System V类的接口相当于是Liunx除了POSIX接口外的另一个子系统 ~~让我觉得用起来并没有那么正义~~*
 
 vfork再exec后的进程依然属于父进程
+
+## 注意
+
+根据同学反馈，在虚拟机里运行的Linux只有在root用户下才能正确运行生产者-消费者，而在其他普通用户下是无法挂载ipc类型的地址的。
+
+试试`sudo ./main.out`

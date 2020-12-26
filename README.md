@@ -25,7 +25,7 @@ WSL2中使用g++编译，gdb调试
 # 编程指北
 调用曾经从未用过的系统API是一件非常有挑战性的事情。许多函数接口需要输入的参数难以一眼就分辨出来（尤其是Win32 API）。
 ## Windows
-推荐直接在MSDN上的C++文档处查看Win32 Api的一手资料。https://docs.microsoft.com/zh-cn/cpp/cpp/?view=msvc-160
+推荐直接在MSDN上查看Win32 Api的一手资料。https://docs.microsoft.com/en-us/windows/win32/api/
 
 建议的路线是：查看老师的PPT课件后，知道本次设计需要利用到哪些函数，接着再到MSDN处查对应函数的接口。
 

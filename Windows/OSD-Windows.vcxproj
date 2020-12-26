@@ -19,10 +19,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="EX_4\ProcessShot.cpp" />
+    <None Include="EX_4\README.md" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="EX_4\README.md" />
+    <ClCompile Include="EX_4\ProcessShot.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

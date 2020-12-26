@@ -255,7 +255,7 @@ int main_producer()
 		srand(GetTickCount());		//改变随机数种子
 		Sleep((rand() % 3) * 1000); //随机睡眠
 
-		//申请一个full
+		//申请一个empty
 		WaitForSingleObject(h_sEmpty, INFINITE);
 		//申请进入缓冲区
 		WaitForSingleObject(h_mMutex, INFINITE);

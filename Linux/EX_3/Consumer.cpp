@@ -60,7 +60,7 @@ int main(int argc, char const *argv[])
     {
         srand(clock());
         //随机睡眠
-        sleep(rand() % 3);
+        sleep(rand() % 4);
         //P full
         P(full_i);
 

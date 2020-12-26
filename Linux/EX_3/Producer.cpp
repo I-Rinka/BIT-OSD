@@ -62,7 +62,7 @@ int main(int argc, char const *argv[])
     {
         srand(clock());
         //随机睡眠
-        sleep(rand() % 3);
+        sleep(rand() % 4);
         //随机选一个字母提交
         char c = NAME[rand() % 3];
 

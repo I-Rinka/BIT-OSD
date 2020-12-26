@@ -188,7 +188,7 @@ int main_consumer()
 	{
 		GetConsoleScreenBufferInfo(hStdout, &pBuffer);
 		srand(GetTickCount());
-		Sleep((rand() % 3) * 1000);
+		Sleep((rand() % 4) * 1000);
 		//申请一个full
 		WaitForSingleObject(h_sFull, INFINITE);
 		//申请进入缓冲区

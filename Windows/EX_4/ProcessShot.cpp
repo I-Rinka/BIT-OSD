@@ -34,8 +34,11 @@ DWORD WatchProcess(const char* target_processname)
 	}
 
 	PROCESSENTRY32 now_process;
+
+	now_process.dwSize = sizeof(PROCESSENTRY32);//传入变量地址前还需要声明变量的大小。并且这个大小是在变量自己内部保存的，而并不是在传入函数内部时使用
+
 	//遍历进程
-	if (!Process32First(hProcessesShot, &now_process))//不知道为什么release的就是不行
+	if (!Process32First(hProcessesShot, &now_process))
 	{
 		cout << "Find Process Failed" << endl;
 	}
@@ -87,7 +90,7 @@ void DisplaySystemInfo()
 		cout << "ARM64";
 		break;
 	}
-
+	cout << endl;
 	SIZE_T page_size = performance_info.PageSize;
 	cout << "进程数:" << performance_info.ProcessCount << "    线程数:" << performance_info.ThreadCount << "    句柄数:" << performance_info.HandleCount << '\n' << "可用内存:" << (double)(performance_info.PhysicalAvailable * page_size) / (double)(1024 * 1024 * 1024) << "GB    内存大小:" << (double)(performance_info.PhysicalTotal * page_size) / (double)(1024 * 1024 * 1024) << "GB    内存使用率:" << (1 - ((double)performance_info.PhysicalAvailable / (double)performance_info.PhysicalTotal)) * 100 << "%    系统缓存:" << performance_info.SystemCache << endl;
 }

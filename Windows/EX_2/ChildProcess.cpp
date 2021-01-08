@@ -1,8 +1,8 @@
 #include <iostream>
-#include <unistd.h>
+#include <Windows.h>
 int main(int argc, char const *argv[])
 {
-    std::cout << "Hi,my name is Íõè÷Ø©" << std::endl;
-    sleep(3);
+    std::cout << "Hi,my name is ï¿½ï¿½ï¿½ï¿½Ø©" << std::endl;
+    Sleep(10000);
     return 0;
 }

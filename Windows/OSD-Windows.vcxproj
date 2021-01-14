@@ -27,10 +27,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <None Include="EX_4\README.md" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="EX_5\myCp.cpp" />
+    <ClCompile Include="EX_5\mycp_enhanced.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

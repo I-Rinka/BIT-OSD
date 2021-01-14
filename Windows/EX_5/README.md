@@ -48,5 +48,5 @@
    1. 通过`CreateDirectory`在新路径创建文件夹
    2. 使用`FindFirstFile`配合`FindNextFile`来遍历文件夹下的所有文件
    3. 将文件夹下的每个文件都递归调用一次本函数
-   4. 使用`CreateFile`同时打开新目录和老目录的文件。并将`dwFlagsAndAttributes`设置为`FILE_FLAG_BACKUP_SEMANTICS`，只有加了这个参数才能打开文件夹的文件句柄。
+   4. 使用`CreateFile`同时打开新目录和老目录的文件。并将`dwFlagsAndAttributes`设置为`FILE_FLAG_BACKUP_SEMANTICS`，只有加了这个参数才能打开文件夹的文件句柄。同时注意，`dwDesiredAccess`不能设置为`GENERIC_ALL`，对目录设置这个会打开失败
    5. 使用`GetFileInformationByHandleEx`的`FileBasicInfo`获得老文件的时间信息，在为新文件调用`SetFileInformationByHandle`修改新文件的时间戳。

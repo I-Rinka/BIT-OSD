@@ -17,93 +17,93 @@ using namespace std;
 //+ Windows文件夹对象的打开方法
 //+ GetBase重新实现
 
-const char *GetBaseName(const char *file_path)
+const char* GetBaseName(const char* file_path)
 {
-    int len = strlen(file_path) - 1;
-    for (int i = len; i >= 0; i--)
-    {
-        if (file_path[i] == '\\')
-        {
-            return (file_path + i + 1);
-        }
-    }
-    return NULL;
+	const char* rt_val = strrchr(file_path, '\\');
+	if (rt_val == NULL)
+	{
+		return strrchr(file_path, '/');
+	}
+	return rt_val;
 }
 
-int CopyFile(const char *source_file, const char *dest_path)
+int CopyFile(const char* source_file, const char* dest_path)
 {
-    DWORD file_type = GetFileAttributes(source_file);
-    char *dest_file = (char *)calloc(MAX_PATH, sizeof(char));
-    sprintf_s(dest_file, MAX_PATH, "%s\\%s", dest_path, GetBaseName(source_file));
-    if (file_type == FILE_ATTRIBUTE_DIRECTORY)
-    {
-        CreateDirectory(dest_file, NULL);
-        WIN32_FIND_DATA find_data;
-        char source_file_dir[MAX_PATH] = {0};
+	DWORD file_type = GetFileAttributes(source_file);
+	char* dest_file = (char*)calloc(MAX_PATH, sizeof(char));
+	if (dest_file != NULL)
+	{
+		sprintf_s(dest_file, MAX_PATH, "%s\\%s", dest_path, GetBaseName(source_file));
+		if (file_type == FILE_ATTRIBUTE_DIRECTORY)
+		{
+			CreateDirectory(dest_file, NULL);
+			WIN32_FIND_DATA find_data;
+			char source_file_dir[MAX_PATH] = { 0 };
 
-        strncpy_s(source_file_dir, source_file, MAX_PATH - 2);
-        strcat_s(source_file_dir, MAX_PATH, "\\*"); //打开文件夹还需要后面加*
-        HANDLE hfind = FindFirstFile(source_file_dir, &find_data);
+			strncpy_s(source_file_dir, source_file, MAX_PATH - 2);
+			strcat_s(source_file_dir, MAX_PATH, "\\*"); //打开文件夹还需要后面加*
+			HANDLE hfind = FindFirstFile(source_file_dir, &find_data);
 
-        if (INVALID_HANDLE_VALUE == hfind)
-        {
-            cout << "Open Dir" << source_file << "Error" << endl;
-            return -1;
-        }
+			if (INVALID_HANDLE_VALUE == hfind)
+			{
+				cout << "Open Dir" << source_file << "Error" << endl;
+				return -1;
+			}
 
-        int len = strnlen(source_file_dir, MAX_PATH) - 1;
-        do
-        {
-            if (strncmp("..", find_data.cFileName, 3) == 0 || strncmp(".", find_data.cFileName, 2) == 0)
-            {
-                continue;
-            }
+			int len = strnlen(source_file_dir, MAX_PATH) - 1;
+			do
+			{
+				if (strncmp("..", find_data.cFileName, 3) == 0 || strncmp(".", find_data.cFileName, 2) == 0)
+				{
+					continue;
+				}
 
-            memset(source_file_dir + len, 0, MAX_PATH - len);
-            strncat(source_file_dir, find_data.cFileName, MAX_PATH); //改造后source_file_dir就变成了需要复制文件的路径
+				memset(source_file_dir + len, 0, (int)MAX_PATH - len);
+				strncat(source_file_dir, find_data.cFileName, strlen(find_data.cFileName)); //改造后source_file_dir就变成了需要复制文件的路径
 
-            if (CopyFile(source_file_dir, dest_file) != 0)
-            {
-                cout << "Copy " << source_file_dir << " error" << endl;
-            }
-        } while (FindNextFile(hfind, &find_data) != 0);
+				if (CopyFile(source_file_dir, dest_file) != 0)
+				{
+					cout << "Copy " << source_file_dir << " error" << endl;
+				}
+			} while (FindNextFile(hfind, &find_data) != 0);
 
-        FindClose(hfind);
-    }
-    else
-    {
-        //一般文件直接复制
-        if (!CopyFileEx(source_file, dest_file, NULL, NULL, NULL, 0x800)) //0x800是COPY_FILE_COPY_SYMLINK，但是Mingw不支持
-        {
-            return -1;
-        }
-    }
+			FindClose(hfind);
+		}
+		else
+		{
+			//一般文件直接复制
+			if (!CopyFileEx(source_file, dest_file, NULL, NULL, NULL, 0x800)) //0x800是COPY_FILE_COPY_SYMLINK，但是Mingw不支持
+			{
+				return -1;
+			}
+		}
 
-    //改时间戳
-    HANDLE source_file_h = CreateFile(source_file, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    HANDLE dest_file_h = CreateFile(dest_file, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (source_file_h == INVALID_HANDLE_VALUE || dest_file_h == INVALID_HANDLE_VALUE)
-    {
-        cout << "Open file Handle failed" << endl;
-        return -1;
-    }
-    BY_HANDLE_FILE_INFORMATION file_info;
-    GetFileInformationByHandle(source_file_h, &file_info);
-    SetFileTime(dest_file_h, &file_info.ftCreationTime, &file_info.ftLastAccessTime, &file_info.ftLastWriteTime);
-    CloseHandle(source_file_h);
-    CloseHandle(dest_file_h);
-    return 0;
+		//改时间戳
+		HANDLE source_file_h = CreateFile(source_file, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		HANDLE dest_file_h = CreateFile(dest_file, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (source_file_h == INVALID_HANDLE_VALUE || dest_file_h == INVALID_HANDLE_VALUE)
+		{
+			cout << "Open file Handle failed" << endl;
+			return -1;
+		}
+		BY_HANDLE_FILE_INFORMATION file_info;
+		GetFileInformationByHandle(source_file_h, &file_info);
+		SetFileTime(dest_file_h, &file_info.ftCreationTime, &file_info.ftLastAccessTime, &file_info.ftLastWriteTime);
+		CloseHandle(source_file_h);
+		CloseHandle(dest_file_h);
+	}
+	return 0;
 }
-int main(int argc, char const *argv[])
+int main(int argc, char const* argv[])
 {
-    if (argc >= 3)
-    {
-        CopyFile(argv[1], argv[2]);
-    }
-    else
-    {
-        cout << "Too Little Arguments!" << endl;
-    }
+	if (argc >= 3)
+	{
+		CopyFile(argv[1], argv[2]);
+	}
+	else
+	{
+		cout << "Too Little Arguments!" << endl;
+	}
 
-    return 0;
+	return 0;
 }

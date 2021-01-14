@@ -30,7 +30,7 @@
     <None Include="EX_4\README.md" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="EX_4\ProcessShot.cpp" />
+    <ClCompile Include="EX_5\myCp.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

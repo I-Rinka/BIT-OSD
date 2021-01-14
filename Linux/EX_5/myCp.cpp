@@ -68,7 +68,7 @@ int MoveFile(const char *path, const char *dest_path)
                 //读到..和.的意思是读到了当前文件夹，我们不需要也无法移动它们
                 if (strncmp(d->d_name, "..", 3) == 0 || strncmp(d->d_name, ".", 2) == 0)
                 {
-                    break;
+                    continue;
                 }
                 strncpy(recursive_path, path, MAX_PATH_LENGTH / 2);
                 strncat(recursive_path, "/", 1);

@@ -13,6 +13,10 @@ using namespace std;
 
 //已知ISSUE：Windows的“绝对路径命名空间”还未掌握（跨盘符复制未实现）; 文件夹时间戳未能成功更改
 
+//todo：
+//+ Windows文件夹对象的打开方法
+//+ GetBase重新实现
+
 const char *GetBaseName(const char *file_path)
 {
     int len = strlen(file_path) - 1;
@@ -52,7 +56,7 @@ int CopyFile(const char *source_file, const char *dest_path)
         {
             if (strncmp("..", find_data.cFileName, 3) == 0 || strncmp(".", find_data.cFileName, 2) == 0)
             {
-                break;
+                continue;
             }
 
             memset(source_file_dir + len, 0, MAX_PATH - len);
